@@ -24,7 +24,7 @@ jobs:
           transfer=root/'.transfer'
           manifest=json.loads((transfer/'manifest.json').read_text())
           for name,entry in manifest.items():
-              data=base64.b64decode(''.join((transfer/'chunks'/p).read_text() for p in entry['chunks']),validate=True)
+              data=base64.b64decode(''.join((transfer/p).read_text() for p in entry['chunks']),validate=True)
               assert len(data)==entry['bytes'],name
               assert hashlib.sha256(data).hexdigest()==entry['sha256'],name
               dest=root/('releases' if name.endswith('.apk') else 'source')/name
