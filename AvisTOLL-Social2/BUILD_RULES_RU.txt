@@ -1,0 +1,43 @@
+AVISTOLL SOCIAL2 — ПРАВИЛА СТАБИЛЬНОЙ ПЕРЕСБОРКИ
+Дата: 2026-11-05
+Публичная ветка: https://github.com/egrrratatuj-blip/Ger/tree/avis-social2
+
+ИСХОДНИК
+Использовать только AvisTOLL-Social2/source/AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.
+Архив очищен от старых .so и закрытого debug-keystore. Не брать исходники из других ZIP.
+Референсный APK: AvisTOLL-Social2/releases/AvisTOLL-Social2-FRESH-NDK21-debug.apk.
+SHA-256 референсного APK: 159c090309098de481235e57ff47a0c885618bb80188ec4900620abf712591d4.
+
+ИНСТРУМЕНТЫ
+Ubuntu 22.04 x86_64; JDK 11 для Gradle 6.5, JDK 17 для sdkmanager.
+Android SDK platforms 28/30/33, Build Tools 28.0.2 и 30.0.3.
+NDK 21.4.7075529 (Clang 9.0.9), CMake 3.18.1.
+Оба native-модуля должны иметь ndkVersion '21.4.7075529'.
+
+КОМАНДА СБОРКИ
+./gradlew -PavisDiagnostics=true -PavisPrivateBridge=true -PavisStorageAlias=true -PavisFreshNative=true clean :app:assembleDebug --no-daemon --no-build-cache --rerun-tasks --stacktrace
+
+СТРОГИЕ ПРАВИЛА
+1. Никогда НЕ включать -PavisRecoveryNative: он использует старые готовые .so.
+2. Не добавлять в исходник libABridge.so, libpine.so или иные готовые .so.
+3. libABridge.so и libpine.so компилировать из C++/ASM на каждом запуске; ABI arm64-v8a.
+4. В Bcore/pine-core/src/main/cpp/utils/scoped_local_ref.h необходим #include <cstddef>.
+5. Внутренние AArch64-символы cdecl(common_closure_bridge_handler) и avis_stat_stub_callback должны иметь .hidden.
+6. Сохранять все четыре Gradle-флага avisDiagnostics/avisPrivateBridge/avisStorageAlias/avisFreshNative.
+7. Не менять package name com.avis.tool.diagnostics, versionName 1.0-sef-social2, Discord OAuth маршруты.
+8. Перед выдачей проверять наличие classes.dex, AndroidManifest.xml, lib/arm64-v8a/libABridge.so, lib/arm64-v8a/libpine.so и целостность ZIP.
+9. Проверять появление .so в build/intermediates/cmake/debug/obj/arm64-v8a; не только наличие в APK.
+10. Сохранять build.log и SHA-256 нового APK; успешная сборка не доказывает успешный запуск на телефоне.
+
+ПОДПИСЬ
+Исходный ZIP не содержит закрытый keystore. В публичном GitHub Actions, если секрет
+SOCIAL2_SIGNING_KEYSTORE_B64 отсутствует, создаётся новый временный ключ подписи.
+Это значит, что автоматически пересобранный APK может НЕ установиться поверх референсного APK.
+Для обновления без удаления нужно использовать тот же закрытый ключ через GitHub Actions Secret.
+Никогда не публиковать keystore, пароли и токены в публичном репозитории.
+Перед переустановкой сделать резервную копию виртуальных данных.
+
+ПРОВЕРКИ НА ТЕЛЕФОНЕ
+Android 16: запуск приложения, экран ключа, Discord OAuth, импорт Discord,
+запуск Oxide внутри виртуальной среды, Storage Alias, Private Bridge, логи.
+При сбое собирать logcat с PID, временем, Java stack trace, native tombstone и Build ID.
