@@ -1,0 +1,82 @@
+name: Build Social2 from source (fresh ARM64 JNI)
+on:
+  push:
+    branches: [avis-social2]
+    paths: ['.github/workflows/build-avis-social2.yml', 'AvisTOLL-Social2/source/AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: avis-social2
+      - name: Unpack and check source
+        run: |
+          set -euo pipefail
+          mkdir source
+          unzip -q AvisTOLL-Social2/source/AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip -d source
+          chmod +x source/gradlew
+          test -z "$(find source -type f \( -name '*.so' -o -name '*.keystore' \) -print -quit)"
+          grep -q "ndkVersion '21.4.7075529'" source/Bcore/build.gradle
+          grep -q "ndkVersion '21.4.7075529'" source/Bcore/pine-core/build.gradle
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK NDK
+        run: |
+          set -euo pipefail
+          SDKMGR="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMGR" --licenses >/dev/null || true
+          "$SDKMGR" --install "platforms;android-28" "platforms;android-30" "platforms;android-33" "build-tools;28.0.2" "build-tools;30.0.3" "ndk;21.4.7075529" "cmake;3.18.1"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+      - name: Signing
+        env:
+          SOCIAL2_SIGNING_KEYSTORE_B64: ${{ secrets.SOCIAL2_SIGNING_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          mkdir -p source/debug-signing
+          if [ -n "$SOCIAL2_SIGNING_KEYSTORE_B64" ]; then
+            printf '%s' "$SOCIAL2_SIGNING_KEYSTORE_B64" | base64 -d > source/debug-signing/avis-debug.keystore
+          else
+            keytool -genkeypair -noprompt -keystore source/debug-signing/avis-debug.keystore -alias androiddebugkey -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 3650
+            echo "WARNING: new signing key may require reinstall"
+          fi
+      - name: Compile all Java and native libraries
+        run: |
+          set -o pipefail
+          cd source
+          ./gradlew -PavisDiagnostics=true -PavisPrivateBridge=true -PavisStorageAlias=true -PavisFreshNative=true clean :app:assembleDebug --no-daemon --no-build-cache --rerun-tasks --stacktrace 2>&1 | tee ../build.log
+      - name: Validate and publish
+        run: |
+          set -euo pipefail
+          APK=source/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          test -s source/Bcore/build/intermediates/cmake/debug/obj/arm64-v8a/libABridge.so
+          test -s source/Bcore/pine-core/build/intermediates/cmake/debug/obj/arm64-v8a/libpine.so
+          unzip -t "$APK" | tail -n 1
+          unzip -Z -1 "$APK" | grep -Fx 'lib/arm64-v8a/libABridge.so'
+          unzip -Z -1 "$APK" | grep -Fx 'lib/arm64-v8a/libpine.so'
+          "$ANDROID_HOME/build-tools/30.0.3/aapt" dump badging "$APK" | grep '^package:'
+          cp "$APK" AvisTOLL-Social2/releases/AvisTOLL-Social2-CI-latest-debug.apk
+          sha256sum AvisTOLL-Social2/releases/AvisTOLL-Social2-CI-latest-debug.apk > AvisTOLL-Social2/releases/CI-latest-sha256.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add AvisTOLL-Social2/releases/AvisTOLL-Social2-CI-latest-debug.apk AvisTOLL-Social2/releases/CI-latest-sha256.txt
+          git commit -m 'ci: publish fresh Social2 build [skip ci]'
+          git pull --rebase origin avis-social2
+          git push origin HEAD:avis-social2
+      - name: Preserve build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Social2-build-logs
+          path: build.log
+          retention-days: 14
