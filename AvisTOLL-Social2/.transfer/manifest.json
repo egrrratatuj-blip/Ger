@@ -1,0 +1,59 @@
+{
+  "AvisTOLL-Social2-FRESH-NDK21-debug.apk": {
+    "sha256": "159c090309098de481235e57ff47a0c885618bb80188ec4900620abf712591d4",
+    "bytes": 4568742,
+    "chunks": [
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part000.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part001.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part002.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part003.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part004.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part005.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part006.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part007.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part008.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part009.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part010.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part011.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part012.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part013.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part014.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part015.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part016.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part017.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part018.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part019.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part020.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part021.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part022.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part023.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part024.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part025.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part026.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part027.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part028.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part029.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part030.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part031.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part032.txt",
+      "AvisTOLL-Social2-FRESH-NDK21-debug.apk.part033.txt"
+    ]
+  },
+  "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip": {
+    "sha256": "8344becc1646a206a4f8802cac8a8af8457f4b64d79b8e2c37158f2e64608170",
+    "bytes": 1403985,
+    "chunks": [
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part000.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part001.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part002.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part003.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part004.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part005.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part006.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part007.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part008.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part009.txt",
+      "AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip.part010.txt"
+    ]
+  }
+}
