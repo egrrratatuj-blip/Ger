@@ -1,0 +1,119 @@
+name: Build verified obfuscated Bcore AAR ARM64
+on:
+  workflow_dispatch:
+  push:
+    branches: [avis-social2]
+    paths:
+      - '.github/workflows/build-bcore-aar.yml'
+      - 'AvisTOLL-Social2/tools/patch_bcore_aar.py'
+      - 'AvisTOLL-Social2/tools/merge_bcore_aar.py'
+      - 'AvisTOLL-Social2/source/AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip'
+permissions:
+  contents: write
+jobs:
+  build-aar:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout published verified Social2 source
+        uses: actions/checkout@v4
+        with:
+          ref: avis-social2
+      - name: Extract source and rename native libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf work-bcore
+          mkdir -p work-bcore/source work-bcore/results
+          unzip -q AvisTOLL-Social2/source/AvisTOLL-Social2-FRESH-PUBLIC-SOURCE.zip -d work-bcore/source
+          python3 AvisTOLL-Social2/tools/patch_bcore_aar.py work-bcore/source | tee work-bcore/results/patch.log
+          chmod +x work-bcore/source/gradlew
+          if find work-bcore/source -type f \( -name '*.so' -o -name '*.keystore' \) | grep -q .; then
+            echo 'ERROR: bundled native binary or private key in source'; exit 1
+          fi
+          echo 'Native: libkxv72q4n.so and libmnr85zt1.so; R8: enabled for Bcore release' > work-bcore/results/features.txt
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK NDK21 and CMake
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMGR="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$SDKMGR"
+          yes | "$SDKMGR" --licenses >/dev/null || true
+          "$SDKMGR" --install "platforms;android-28" "platforms;android-30" "platforms;android-33" "build-tools;28.0.2" "build-tools;30.0.3" "ndk;21.4.7075529" "cmake;3.18.1"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+      - name: Build clean library modules with Social2 feature flags and R8
+        shell: bash
+        run: |
+          set -o pipefail
+          cd work-bcore/source
+          ./gradlew -PavisPrivateBridge=true -PavisStorageAlias=true -PavisFreshNative=true -PavisDiagnostics=true clean :Bcore:assembleRelease :Bcore:black-fake:assembleRelease :Bcore:black-hook:assembleRelease :Bcore:pine-core:assembleRelease :Bcore:pine-xposed:assembleRelease :Bcore:pine-xposed-res:assembleRelease :android-mirror:assembleRelease --no-daemon --no-build-cache --rerun-tasks --stacktrace 2>&1 | tee ../results/build.log
+      - name: Assemble fat AAR with seven module classes and two new SO
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 AvisTOLL-Social2/tools/merge_bcore_aar.py work-bcore/source work-bcore/results
+          unzip -t work-bcore/results/Bcore.aar | tail -1
+          unzip -Z -1 work-bcore/results/Bcore.aar | grep -Fx 'jni/arm64-v8a/libkxv72q4n.so'
+          unzip -Z -1 work-bcore/results/Bcore.aar | grep -Fx 'jni/arm64-v8a/libmnr85zt1.so'
+          test -s work-bcore/source/Bcore/build/intermediates/cmake/release/obj/arm64-v8a/libkxv72q4n.so
+          test -s work-bcore/source/Bcore/pine-core/build/intermediates/cmake/release/obj/arm64-v8a/libmnr85zt1.so
+          test ! -e work-bcore/source/Bcore/src/recoveryJniLibs/arm64-v8a/libABridge.so
+          test ! -e work-bcore/source/Bcore/pine-core/src/recoveryJniLibs/arm64-v8a/libpine.so
+          # Export a fully patched and sanitized reproducible source archive.
+          (cd work-bcore/source && zip -q -r -9 ../results/Bcore-Source.zip . -x '*/build/*' '*/.gradle/*' '*.so' '*.keystore')
+      - name: Build a consumer app linked only to the fat AAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd work-bcore/source
+          mkdir -p app/libs debug-signing
+          cp ../results/Bcore.aar app/libs/Bcore.aar
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/build.gradle')
+          t=p.read_text()
+          assert "implementation project(':Bcore')" in t
+          t=t.replace("implementation project(':Bcore')","""implementation files('libs/Bcore.aar')
+              implementation 'com.google.android.material:material:1.3.0'
+              implementation 'com.github.tiann:FreeReflection:3.2.2'
+              implementation "com.github.CodingGay.BlackReflection:core:$rootProject.ext.blackReflection" """)
+          p.write_text(t)
+          PY
+          keytool -genkeypair -noprompt -keystore debug-signing/avis-debug.keystore -alias androiddebugkey -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 3650
+          ./gradlew -PavisDiagnostics=true -PavisPrivateBridge=true -PavisStorageAlias=true -PavisFreshNative=true :app:assembleDebug --no-daemon --no-build-cache --rerun-tasks --stacktrace > ../results/consumer-build.log 2>&1 || { tail -n 100 ../results/consumer-build.log; exit 1; }
+          cp app/build/outputs/apk/debug/app-debug.apk ../results/Bcore-consumer-smoke.apk
+          unzip -Z -1 ../results/Bcore-consumer-smoke.apk | grep -Fx 'lib/arm64-v8a/libkxv72q4n.so'
+          unzip -Z -1 ../results/Bcore-consumer-smoke.apk | grep -Fx 'lib/arm64-v8a/libmnr85zt1.so'
+          "$ANDROID_HOME/build-tools/30.0.3/aapt" dump badging ../results/Bcore-consumer-smoke.apk | grep '^package:'
+      - name: Publish AAR, source, verification evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p AvisTOLL-Social2/Bcore-AAR
+          cp work-bcore/results/Bcore.aar AvisTOLL-Social2/Bcore-AAR/Bcore.aar
+          cp work-bcore/results/Bcore-Source.zip AvisTOLL-Social2/Bcore-AAR/Bcore-Source.zip
+          cp work-bcore/results/aar-manifest.json AvisTOLL-Social2/Bcore-AAR/aar-manifest.json
+          cp work-bcore/results/features.txt AvisTOLL-Social2/Bcore-AAR/features.txt
+          sha256sum AvisTOLL-Social2/Bcore-AAR/Bcore.aar AvisTOLL-Social2/Bcore-AAR/Bcore-Source.zip > AvisTOLL-Social2/Bcore-AAR/SHA256SUMS.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add AvisTOLL-Social2/Bcore-AAR
+          git commit -m 'ci: publish verified fresh Social2 Bcore AAR and sources [skip ci]'
+          git pull --rebase origin avis-social2
+          git push origin HEAD:avis-social2
+      - name: Preserve all build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Social2-Bcore-AAR-build
+          path: |
+            work-bcore/results/
+          retention-days: 14
