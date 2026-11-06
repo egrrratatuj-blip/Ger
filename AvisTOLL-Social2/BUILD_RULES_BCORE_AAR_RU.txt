@@ -1,0 +1,64 @@
+BCORE.AAR — ПРАВИЛА СБОРКИ И ИНТЕГРАЦИИ (SOCIAL2)
+Дата: 2026-11-07
+Публичная ветка: https://github.com/egrrratatuj-blip/Ger/tree/avis-social2
+Автосборка: .github/workflows/build-bcore-aar.yml
+Исходный код: AvisTOLL-Social2/Bcore-AAR/Bcore-Source.zip
+Готовый артефакт: AvisTOLL-Social2/Bcore-AAR/Bcore.aar
+
+1. БАЗА
+Собирать только из Social2 FRESH source; исходный архив содержит Java/C++/ASM.
+Никаких recoveryJniLibs, готовых .so и режима avisRecoveryNative.
+Компиляция на Ubuntu 22.04, Gradle 6.5/AGP 4.0.1, JDK 11,
+Android SDK 28/30/33, NDK 21.4.7075529 (Clang 9), CMake 3.18.1.
+Архитектура arm64-v8a. Не заменять NDK на более новый без тестов.
+
+2. ИМЕНА JNI
+Bcore: libkxv72q4n.so (CMake target kxv72q4n).
+Pine: libmnr85zt1.so (CMake target mnr85zt1).
+JNI загрузка NativeCore, RuntimeNativeLibrary.publish, PineConfig
+и внутренние C++ ссылки должны согласовываться с этими именами.
+Должны существовать JNI_OnLoad и Java-классы JNI регистрации.
+Запрет копирования libABridge.so / libpine.so из рабочих старых APK.
+
+3. ПАРАМЕТРЫ GRADLE
+-PavisPrivateBridge=true -PavisStorageAlias=true -PavisFreshNative=true
+-PavisDiagnostics=true
+R8 minifyEnabled true в release Bcore. Точные названия классов JNI,
+Binder, reflection, IPC, Pine и Xposed сохраняются keep-правилами.
+Не включать ни сторонние агрессивные обфускаторы, ни правила,
+ломающие FindClass/RegisterNatives/reflection. R8 входит в AGP.
+
+4. ПОЛНАЯ СБОРКА
+./gradlew -PavisPrivateBridge=true -PavisStorageAlias=true -PavisFreshNative=true -PavisDiagnostics=true clean :Bcore:assembleRelease :Bcore:black-fake:assembleRelease :Bcore:black-hook:assembleRelease :Bcore:pine-core:assembleRelease :Bcore:pine-xposed:assembleRelease :Bcore:pine-xposed-res:assembleRelease :android-mirror:assembleRelease --no-daemon --no-build-cache --rerun-tasks --stacktrace
+После сборки запускать tools/merge_bcore_aar.py для объединения 7 внутренних модулей в Bcore.aar.
+
+5. ПОДКЛЮЧЕНИЕ В ЧУЖОЕ ПРИЛОЖЕНИЕ
+Скопировать Bcore.aar в app/libs/Bcore.aar.
+В app/build.gradle добавить:
+  implementation files('libs/Bcore.aar')
+  implementation 'androidx.appcompat:appcompat:1.2.0'
+  implementation 'com.google.android.material:material:1.3.0'
+  implementation 'com.github.tiann:FreeReflection:3.2.2'
+  implementation 'com.github.CodingGay.BlackReflection:core:1.1.2'
+В корневом repositories должны быть google(), mavenCentral(), jitpack.io.
+Внешние Maven AAR и JAR НЕ включены в Bcore.aar, чтобы не ломать ресурсы AndroidX;
+без перечисленных зависимостей не гарантируется компиляция.
+На Android ManifestMerge может потребоваться адаптация provider authorities
+и компонента прокси к applicationId приложения.
+Весь UI приложения/Discord не включён — только Bcore и внутренние модули.
+
+6. ОБЯЗАТЕЛЬНЫЕ ПРОВЕРКИ
+- Файл Bcore.aar — корректный ZIP, содержит AndroidManifest.xml, classes.jar.
+- classes.jar содержит NativeCore, PineConfig, JniHook, mirror.RefClass.
+- jni/arm64-v8a/libkxv72q4n.so и jni/arm64-v8a/libmnr85zt1.so собраны свежими.
+- Ни libABridge.so, ни libpine.so не должны входить в Bcore.aar.
+- Запустить компиляцию и упаковку тестового APK, использующего только merged AAR.
+- Сохранить build.log, consumer-build.log, SHA-256, полный список классов и ELF.
+- Проверить runtime: private bridge, Storage Alias, виртуальный пакет, Discord и Oxide.
+- Без запуска на телефоне сборка считается 'compiled and structurally verified',
+  но НЕ 'runtime proven'.
+
+7. ЗАЩИТА
+R8 и переименование библиотек НЕ являются гарантией защиты от анализа.
+Не включать в публичный AAR приватный ключ, токены или пароли.
+Не терять ProGuard/R8 mapping для отладки. Не выкладывать логи с приватными данными.
