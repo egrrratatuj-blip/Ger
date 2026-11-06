@@ -1,0 +1,41 @@
+{
+  "Bcore": {
+    "bytes": 1295073,
+    "sha256": "494b6c36d7f459cf47a518d4e750a1ea40b75d0cfd6274935a3144ab4a6a3095"
+  },
+  "black-fake": {
+    "bytes": 62113,
+    "sha256": "fb5426cad4430f59b42d60949aebee5f91725eaa038d5309f90112f4a44d726b"
+  },
+  "black-hook": {
+    "bytes": 35129,
+    "sha256": "ce229ce666f886ed438b24832e5f72f612fb4bb727a2fbbeb26ca83607f5955a"
+  },
+  "android-mirror": {
+    "bytes": 605812,
+    "sha256": "1812b32072a49364b2f627aa7d824eec74601d8a2a190cfcdc50e46aca29c4a9"
+  },
+  "pine-core": {
+    "bytes": 141067,
+    "sha256": "9b1900d728d4cbe3941bc81fc89df86a54c5d0e3e6715b8a0bb285085e23c7c1"
+  },
+  "pine-xposed": {
+    "bytes": 143813,
+    "sha256": "1990028fd5642cb400aacc16d4be437f0b8592e22139c3d231f5946492b3d085"
+  },
+  "pine-xposed-res": {
+    "bytes": 68518,
+    "sha256": "4354047695cabfd8f8eb8e882e4340b769a44e6979c8f65de963111ebaf579a7"
+  },
+  "Bcore.aar": {
+    "bytes": 2152550,
+    "sha256": "83d09db5a494d51602ab10fa4141a8908b1b98a0174fa74c393c0779cbbfb715",
+    "class_entries": 2718,
+    "jni": [
+      "jni/arm64-v8a/libkxv72q4n.so",
+      "jni/arm64-v8a/libmnr85zt1.so"
+    ],
+    "internal_modules": 7,
+    "external_maven_dependencies_embedded": false
+  }
+}

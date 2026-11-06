@@ -1,0 +1,1 @@
+Native: libkxv72q4n.so and libmnr85zt1.so; R8: enabled for Bcore release
