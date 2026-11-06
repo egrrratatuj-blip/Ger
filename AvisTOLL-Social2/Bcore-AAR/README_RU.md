@@ -10,8 +10,8 @@
 - [Статистика и SHA-256](aar-manifest.json).
 - [GitHub Actions](https://github.com/egrrratatuj-blip/Ger/actions/workflows/build-bcore-aar.yml).
 
-SHA-256 первой проверенной сборки Bcore.aar:
-`83d09db5a494d51602ab10fa4141a8908b1b98a0174fa74c393c0779cbbfb715`
+SHA-256 текущей проверенной сборки Bcore.aar:
+`f95f2e2e001e7055d5c20cf8b7131d64ff0ab8daa44d3624f3e66429005e1539`
 
 ## Нативные библиотеки
 
@@ -20,6 +20,8 @@ SHA-256 первой проверенной сборки Bcore.aar:
 
 Загружающие классы, CMake targets, внутренние упоминания и ELF SONAME согласованы. 
 `JNI_OnLoad` экспортируется обоими ELF-файлами.
+
+Исходники: SHA-256 `035b730d1f8f0a37ae5589f7f5d5ec0c6334f4c66b54235f70abe52abb1a694a`; в архиве удалены .gradle/.cxx и готовые .so.
 
 ## Подключение
 
