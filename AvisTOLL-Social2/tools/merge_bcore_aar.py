@@ -49,7 +49,7 @@ assert sorted(native)==sorted(expected),f'Unexpected JNI libraries: {list(native
 for n in ('top/niunaijun/blackbox/core/NativeCore.class',
           'top/canyie/pine/PineConfig.class',
           'top/niunaijun/jnihook/jni/JniHook.class',
-          'mirror/RefClass.class'):
+          'black/android/app/ActivityThread.class'):
     assert n in classes,n
 
 jarbuf=BytesIO()
