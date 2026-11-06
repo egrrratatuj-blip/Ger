@@ -1,2 +1,2 @@
-83d09db5a494d51602ab10fa4141a8908b1b98a0174fa74c393c0779cbbfb715  AvisTOLL-Social2/Bcore-AAR/Bcore.aar
-da2b4e06c500a2afee542b18c26383048b68bcb27df911ebfc6bf5d860928669  AvisTOLL-Social2/Bcore-AAR/Bcore-Source.zip
+f95f2e2e001e7055d5c20cf8b7131d64ff0ab8daa44d3624f3e66429005e1539  AvisTOLL-Social2/Bcore-AAR/Bcore.aar
+035b730d1f8f0a37ae5589f7f5d5ec0c6334f4c66b54235f70abe52abb1a694a  AvisTOLL-Social2/Bcore-AAR/Bcore-Source.zip
