@@ -1,0 +1,52 @@
+name: Publish Social2 Android16 fixed APK
+on:
+  push:
+    branches: [avis-social2]
+    paths: ['.github/workflows/publish-social2-android16.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: avis-social2
+      - name: Recover and verify release APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,hashlib,json
+          root=Path('AvisTOLL-Social2')
+          stage=root/'.transfer-android16'
+          m=json.loads((stage/'manifest.json').read_text())
+          data=base64.b64decode(''.join((stage/p).read_text() for p in m['chunks']),validate=True)
+          assert len(data)==m['bytes'],(len(data),m['bytes'])
+          assert hashlib.sha256(data).hexdigest()==m['sha256']
+          assert m['sha256']=='7c0e5c752eeca35726253c736d62ccc069263ba7dd8ee03f061f710de2010bd9'
+          out=root/'releases'/m['file_name']
+          out.parent.mkdir(exist_ok=True)
+          out.write_bytes(data)
+          (root/'releases'/'ANDROID16-FIX-SHA256SUMS.txt').write_text(m['sha256']+'  '+m['file_name']+'\n')
+          print('Verified APK',out,'bytes',len(data))
+          PY
+          APK=AvisTOLL-Social2/releases/AvisTOLL-Social2-ANDROID16-FIX-debug.apk
+          unzip -t "$APK" | tail -n 1
+          unzip -Z -1 "$APK" | grep -Fx 'lib/arm64-v8a/libABridge.so'
+          unzip -Z -1 "$APK" | grep -Fx 'lib/arm64-v8a/libpine.so'
+          unzip -Z -1 "$APK" | grep -Fx 'classes3.dex'
+      - name: Finalize public files and remove encoded staging chunks
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -rq AvisTOLL-Social2/.transfer-android16
+          git add AvisTOLL-Social2/releases/AvisTOLL-Social2-ANDROID16-FIX-debug.apk AvisTOLL-Social2/releases/ANDROID16-FIX-SHA256SUMS.txt
+          git commit -m 'release: verified Android16 runtime-fixed Social2 APK [skip ci]'
+          git pull --rebase origin avis-social2
+          git push origin HEAD:avis-social2
